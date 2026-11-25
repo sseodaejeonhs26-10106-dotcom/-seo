@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10233e" />
+    <meta name="description" content="17명의 자리를 한 번에 공정하게 정하는 교실 자리 배치표" />
+    <title>랜덤자리뽑기 · 17명 교실 자리 배치</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+        background: #f3f7fb;
+        color: #10233e;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at 50% 0%, #e4f4f3 0, #f3f7fb 42%, #f3f7fb 100%);
+      }
+
+      button { font: inherit; }
+
+      .page {
+        width: min(100% - 32px, 1080px);
+        margin: 0 auto;
+        padding: clamp(24px, 4vw, 52px) 0 56px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 34px;
+      }
+
+      .brand { display: flex; align-items: center; gap: 12px; font-weight: 850; font-size: 1.12rem; letter-spacing: -.03em; }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #10233e;
+        color: #fff;
+        font-size: 1.15rem;
+      }
+      .class-count { color: #52657d; font-size: .93rem; font-weight: 700; }
+
+      .intro { text-align: center; margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: #d9f2ed;
+        color: #126455;
+        font-size: .85rem;
+        font-weight: 800;
+        letter-spacing: .01em;
+      }
+      h1 { margin: 16px 0 8px; font-size: clamp(2.2rem, 5vw, 3.75rem); line-height: 1.15; letter-spacing: -.06em; }
+      .intro p { margin: 0; color: #52657d; font-size: clamp(1rem, 2vw, 1.12rem); line-height: 1.6; }
+
+      .actions { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 24px 0 34px; }
+      .action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 54px;
+        padding: 0 24px;
+        border-radius: 14px;
+        border: 1px solid transparent;
+        font-weight: 800;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform .16s, background .16s, box-shadow .16s;
+      }
+      .action:hover:not(:disabled) { transform: translateY(-2px); }
+      .action:active:not(:disabled) { transform: translateY(0); }
+      .action:focus-visible { outline: 3px solid #24b29b; outline-offset: 3px; }
+      .primary { background: #10233e; color: white; box-shadow: 0 10px 20px #10233e24; }
+      .primary:hover { background: #1d385d; }
+      .secondary { background: white; border-color: #cedae5; color: #10233e; }
+      .secondary:hover:not(:disabled) { background: #eaf1f7; }
+      .secondary:disabled { opacity: .48; cursor: not-allowed; }
+      .icon { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+      .sheet {
+        background: #fff;
+        border: 1px solid #e1e9ef;
+        border-radius: 28px;
+        box-shadow: 0 22px 60px #17304d12;
+        padding: clamp(20px, 4vw, 44px);
+      }
+      .sheet-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 28px; }
+      .sheet-title { margin: 0; font-size: clamp(1.25rem, 2.6vw, 1.6rem); letter-spacing: -.04em; }
+      .sheet-caption { color: #6c7d91; font-size: .93rem; font-weight: 700; }
+
+      .teacher-area { display: flex; justify-content: center; margin-bottom: 27px; }
+      .teacher-desk {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: min(42%, 240px);
+        min-width: 130px;
+        height: 56px;
+        border-radius: 12px;
+        background: #dcebe8;
+        border: 2px solid #99cbc0;
+        color: #225f56;
+        font-weight: 850;
+        font-size: 1.08rem;
+      }
+      .front-line { height: 1px; background: #e3eaf0; margin-bottom: 30px; }
+      .rows { display: grid; gap: clamp(10px, 1.8vw, 18px); }
+      .seat-row { display: flex; justify-content: center; gap: clamp(8px, 1.7vw, 18px); }
+      .seat {
+        display: grid;
+        place-items: center;
+        width: min(17%, 132px);
+        aspect-ratio: 1.38;
+        min-height: 74px;
+        border: 2px solid #d8e5ed;
+        border-bottom-width: 5px;
+        border-radius: 18px;
+        background: #f2f8fb;
+        color: #10233e;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 850;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        transition: background .25s, border-color .25s, transform .25s;
+      }
+      .seat.empty { color: #b9cad5; border-style: dashed; border-bottom-width: 2px; }
+      .seat.filled { background: #e8f7f3; border-color: #91d8c6; }
+      .seat.just-drawn { animation: pop .35s both; }
+      @keyframes pop { from { transform: scale(.84); opacity: .45; } to { transform: scale(1); opacity: 1; } }
+      .sheet-footer { margin: 24px 0 0; color: #6c7d91; text-align: center; font-size: .9rem; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+      @media (max-width: 600px) {
+        .page { width: min(100% - 20px, 1080px); padding-top: 18px; }
+        .topbar { margin-bottom: 26px; padding: 0 4px; }
+        .class-count { font-size: .84rem; }
+        .actions { margin: 22px 0 26px; }
+        .action { min-height: 51px; padding: 0 18px; }
+        .sheet { border-radius: 20px; padding: 20px 10px 24px; }
+        .sheet-header { padding: 0 10px; margin-bottom: 22px; }
+        .teacher-area { margin-bottom: 20px; }
+        .front-line { margin: 0 10px 20px; }
+        .seat { width: 18%; min-height: 0; aspect-ratio: 1.1; border-radius: 11px; font-size: clamp(1.55rem, 7vw, 2.5rem); }
+        .seat-row { gap: 5px; }
+        .rows { gap: 8px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      }
+
+      @page { size: A4 portrait; margin: 15mm; }
+      @media print {
+        :root, body { background: #fff !important; color: #000; }
+        .page { width: 100%; max-width: none; padding: 0; margin: 0; }
+        .topbar, .intro, .actions, .sheet-footer { display: none !important; }
+        .sheet { border: 0; border-radius: 0; box-shadow: none; padding: 0; }
+        .sheet-header { margin-bottom: 24mm; }
+        .sheet-title { font-size: 20pt; }
+        .sheet-caption { color: #444; }
+        .teacher-desk { border: 2px solid #444; background: white; color: #000; height: 17mm; font-size: 15pt; }
+        .teacher-area { margin-bottom: 10mm; }
+        .front-line { background: #bbb; margin-bottom: 12mm; }
+        .rows { gap: 7mm; }
+        .seat-row { gap: 4mm; }
+        .seat { width: 29mm; min-height: 23mm; border: 2px solid #555; border-bottom-width: 3px; border-radius: 3mm; background: white !important; color: #000; font-size: 26pt; animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">▦</span><span>랜덤자리뽑기</span></div>
+        <span class="class-count">우리 반 · 17명</span>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <span class="eyebrow">한 번에 완성하는 자리표</span>
+        <h1 id="page-title">오늘의 자리를 뽑아볼까요?</h1>
+        <p>버튼 한 번으로 1번부터 17번까지, 모든 자리를 무작위로 정해요.</p>
+      </section>
+
+      <div class="actions">
+        <button class="action primary" id="shuffle" type="button">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3c4 0 6 10 10 10h3"/><path d="m17 14 3 3-3 3"/><path d="M4 17h3c1.7 0 3-1.8 4.2-3.9M14.4 9.5C15.2 8 16 7 17 7h3"/><path d="m17 4 3 3-3 3"/></svg>
+          <span id="shuffle-label">자리 뽑기</span>
+        </button>
+        <button class="action secondary" id="print" type="button" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 15h12v6H6zM18 12h.01"/></svg>
+          인쇄하기
+        </button>
+      </div>
+
+      <section class="sheet" aria-label="교실 자리 배치표">
+        <div class="sheet-header">
+          <h2 class="sheet-title">교실 자리 배치표</h2>
+          <span class="sheet-caption">앞쪽이 교탁입니다</span>
+        </div>
+        <div class="teacher-area"><div class="teacher-desk">교탁</div></div>
+        <div class="front-line" aria-hidden="true"></div>
+        <div class="rows" id="rows"></div>
+        <p class="sheet-footer" id="sheet-footer">자리 뽑기를 누르면 번호가 나타납니다.</p>
+      </section>
+      <p class="sr-only" id="announcement" role="status" aria-live="polite"></p>
+    </main>
+
+    <script>
+      const rowSizes = [4, 4, 4, 5];
+      const rowsElement = document.getElementById('rows');
+      const shuffleButton = document.getElementById('shuffle');
+      const shuffleLabel = document.getElementById('shuffle-label');
+      const printButton = document.getElementById('print');
+      const announcement = document.getElementById('announcement');
+      const footer = document.getElementById('sheet-footer');
+
+      for (const [rowIndex, count] of rowSizes.entries()) {
+        const row = document.createElement('div');
+        row.className = 'seat-row';
+        row.setAttribute('aria-label', `${rowIndex + 1}번째 줄`);
+        for (let i = 0; i < count; i++) {
+          const seat = document.createElement('div');
+          seat.className = 'seat empty';
+          seat.textContent = '?';
+          seat.setAttribute('aria-label', '아직 정하지 않은 자리');
+          row.append(seat);
+        }
+        rowsElement.append(row);
+      }
+
+      function randomIndex(maxInclusive) {
+        const range = maxInclusive + 1;
+        const limit = Math.floor(0x100000000 / range) * range;
+        const number = new Uint32Array(1);
+        do { crypto.getRandomValues(number); } while (number[0] >= limit);
+        return number[0] % range;
+      }
+
+      function shuffleNumbers() {
+        const numbers = Array.from({ length: 17 }, (_, i) => i + 1);
+        for (let i = numbers.length - 1; i > 0; i--) {
+          const j = randomIndex(i);
+          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        return numbers;
+      }
+
+      shuffleButton.addEventListener('click', () => {
+        const numbers = shuffleNumbers();
+        const seats = rowsElement.querySelectorAll('.seat');
+        seats.forEach((seat, index) => {
+          seat.textContent = numbers[index];
+          seat.className = 'seat filled';
+          seat.setAttribute('aria-label', `${numbers[index]}번`);
+          void seat.offsetWidth;
+          seat.classList.add('just-drawn');
+          seat.style.animationDelay = `${Math.floor(index / 4) * 50}ms`;
+        });
+        shuffleLabel.textContent = '다시 섞기';
+        printButton.disabled = false;
+        footer.textContent = '1번부터 17번까지 한 자리씩 배치되었습니다.';
+        announcement.textContent = '새 자리 배치가 완료되었습니다.';
+      });
+
+      printButton.addEventListener('click', () => window.print());
+    </script>
+  </body>
+</html>
